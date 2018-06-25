@@ -15,7 +15,8 @@ Expires: December 26, 2018                                     J. Watson
 
 Abstract
 
-   TODO
+   TODO Come back and finish this after the rest of the document is
+   written.
 
 Status of This Memo
 
@@ -52,7 +53,6 @@ Copyright Notice
 
 
 
-
 Li, et al.              Expires December 26, 2018               [Page 1]
 
 Internet-Draft                     DDM                         June 2018
@@ -62,45 +62,45 @@ Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
    2.  Structure . . . . . . . . . . . . . . . . . . . . . . . . . .   2
-     2.1.  Tables  . . . . . . . . . . . . . . . . . . . . . . . . .   2
-     2.2.  Cells . . . . . . . . . . . . . . . . . . . . . . . . . .   2
-       2.2.1.  Value Cells . . . . . . . . . . . . . . . . . . . . .   2
-       2.2.2.  Delegate Cells  . . . . . . . . . . . . . . . . . . .   2
-     2.3.  Root Key Listing  . . . . . . . . . . . . . . . . . . . .   2
-     2.4.  Delegation  . . . . . . . . . . . . . . . . . . . . . . .   2
-     2.5.  Merkle Tree . . . . . . . . . . . . . . . . . . . . . . .   2
-   3.  Consensus . . . . . . . . . . . . . . . . . . . . . . . . . .   3
-     3.1.  Protocol  . . . . . . . . . . . . . . . . . . . . . . . .   3
-     3.2.  Enforced Transitions  . . . . . . . . . . . . . . . . . .   3
-   4.  Representative Use Cases  . . . . . . . . . . . . . . . . . .   3
-     4.1.  DNS Delegation  . . . . . . . . . . . . . . . . . . . . .   3
-     4.2.  IP Address Delegation . . . . . . . . . . . . . . . . . .   3
-   5.  Security Considerations . . . . . . . . . . . . . . . . . . .   3
-   6.  Normative References  . . . . . . . . . . . . . . . . . . . .   3
-   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .   3
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .   3
+     2.1.  Cells . . . . . . . . . . . . . . . . . . . . . . . . . .   2
+     2.2.  Tables  . . . . . . . . . . . . . . . . . . . . . . . . .   3
+     2.3.  Root Key Listing  . . . . . . . . . . . . . . . . . . . .   4
+     2.4.  Delegation  . . . . . . . . . . . . . . . . . . . . . . .   4
+     2.5.  Merkle Tree . . . . . . . . . . . . . . . . . . . . . . .   4
+   3.  Consensus . . . . . . . . . . . . . . . . . . . . . . . . . .   5
+     3.1.  Protocol  . . . . . . . . . . . . . . . . . . . . . . . .   5
+     3.2.  Enforced Transitions  . . . . . . . . . . . . . . . . . .   5
+   4.  Representative Use Cases  . . . . . . . . . . . . . . . . . .   5
+     4.1.  DNS Delegation  . . . . . . . . . . . . . . . . . . . . .   5
+     4.2.  IP Address Delegation . . . . . . . . . . . . . . . . . .   5
+   5.  Security Considerations . . . . . . . . . . . . . . . . . . .   5
+   6.  Normative References  . . . . . . . . . . . . . . . . . . . .   5
+   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .   5
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .   5
 
 1.  Introduction
 
-   TODO
+   *** copy stuff from our previous presentations and stuffz ***
 
 2.  Structure
 
-   TODO
+   TODO explain how owners/delegators/authorities are identified by
+   their public key each authority can make delegations in their
+   _table_, recorded in individual _cells_.
 
-2.1.  Tables
+   explain use of signature briefly
 
-2.2.  Cells
+   typedef publickey opaque[32];
 
-2.2.1.  Value Cells
+   struct signature {
+       publickey pk;
+       opaque data[32];
+   };
 
-2.2.2.  Delegate Cells
+2.1.  Cells
 
-2.3.  Root Key Listing
 
-2.4.  Delegation
 
-2.5.  Merkle Tree
 
 
 
@@ -110,6 +110,118 @@ Table of Contents
 
 
 Li, et al.              Expires December 26, 2018               [Page 2]
+
+Internet-Draft                     DDM                         June 2018
+
+
+   /* */
+   struct valuecell {
+       opaque value<>;           /* */
+       publickey owner_key;      /* */
+       signature transition_sig; /* */
+   };
+
+   /* */
+   struct delegatecell {
+       opaque namespace<>;       /* */
+       publickey *delegee;       /* */
+       signature authority_sig;  /* */
+   };
+
+   enum celltype {
+       VALUE = 0,
+       DELEGATE = 1
+   };
+
+   /* */
+   union cell switch (celltype type) {
+   case VALUE:
+       valuecell vcell;
+   case DELEGATE:
+       delegatecell dcell;
+   };
+
+2.2.  Tables
+
+   /* */
+   enum tabletype {
+       PREFIX = 0,
+       SUFFIX = 1,
+       FLAT = 2
+   };
+
+   /* */
+   struct tableentry {
+       opaque lookup_key<>; /* */
+       cell cells<>;        /* */
+   }
+
+   /* */
+   struct table {
+       tabletype type;        /* */
+       tableentry entries<>; /* */
+   };
+
+
+
+
+Li, et al.              Expires December 26, 2018               [Page 3]
+
+Internet-Draft                     DDM                         June 2018
+
+
+2.3.  Root Key Listing
+
+   /* */
+   struct tableentry {
+       publickey authority; /* */
+       table *delegations;  /* */
+   }
+
+   /* */
+   struct tables {
+       tableentry entries<>; /* */
+   }
+
+   Adding to the root listing is by ???. No one knows yet.
+
+2.4.  Delegation
+
+   rules are based on the type of the table, discussed later (below).
+   delegating the whole or part of a namespace requires adding a new
+   lookup key for the namespace and a matching delegate cell.  The dcell
+   should be created with the same namespace value, the publickey of the
+   _delegee_, who will control a table for futher sub-delegating the
+   namespace.  Finally, the dcell is signed by the table authority
+   publickey to authorize the addition.
+
+2.5.  Merkle Tree
+
+   We can use the Trillian implementation _if_ we can uniquely identify
+   tables by name -> root key + path of keys down to the delegation.
+   Thus, to get to a table, you have to perform a log-time lookup
+   procedure during which it is impossible to reach an entry not on the
+   proper chain (hashes of a key chain should be hard to guess).  Also
+   helps us validate delegation during consensus (discussed later) Thus,
+   the virtual structure (tree of tables) is different from the actual
+   structure (leaf-only Merkle tree).
+
+   On delegation, the change should contain (1) proof (i.e. hash path to
+   root for updated table), (2) the updated table delta, (3) the new
+   table (empty) to add to the tree with the right key.
+
+   Then: * explain how to hash up the tree / get an existence proof *
+   what do we need to perform consensus? an added/updated cell and the
+   hash path to the root
+
+
+
+
+
+
+
+
+Li, et al.              Expires December 26, 2018               [Page 4]
 
 Internet-Draft                     DDM                         June 2018
 
@@ -165,7 +277,7 @@ Authors' Addresses
 
 
 
-Li, et al.              Expires December 26, 2018               [Page 3]
+Li, et al.              Expires December 26, 2018               [Page 5]
 
 Internet-Draft                     DDM                         June 2018
 
@@ -221,4 +333,4 @@ Internet-Draft                     DDM                         June 2018
 
 
 
-Li, et al.              Expires December 26, 2018               [Page 4]
+Li, et al.              Expires December 26, 2018               [Page 6]
