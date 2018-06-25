@@ -1,65 +1,100 @@
 ---
-title: TODO - Your title
-abbrev: TODO - Abbreviation
-docname: draft-todo-your-name-here
-category: info
+title: Delegated Distributed Mappings
+abbrev: DDM
+docname: draft-watson-dinrg-ddm-00
+category: exp
 
 ipr: trust200902
-area: General
-workgroup: TODO Working Group
-keyword: Internet-Draft
+area: Internet
+keyword: delegation
 
 stand_alone: yes
 pi: [toc, sortrefs, symrefs]
 
 author:
  -
-    ins: T. Todo
-    name: Todo Fullname
-    organization: TODO Organization
-    email: todo@example.com
+    ins: S. Li
+    name: Sydney Li
+    organization: Electronic Frontier Foundation
+    abbrev: EFF
+    email: sydney@eff.org
+    street: <TODO fill this in>
+    city: <TODO fill this in>
+    country: US
+ -
+    ins: C. Man
+    name: Colin Man
+    organization: Stanford University
+    email: colinman@stanford.edu
+    street: <TODO fill this in>
+    city: <TODO fill this in>
+    country: US
+ -
+    ins: J. Watson
+    name: Jean-Luc Watson
+    organization: Stanford University
+    email: jlwatson@cs.stanford.edu
+    street: 353 Serra Mall
+    city: Stanford, CA
+    country: US
 
 normative:
   RFC2119:
 
 informative:
 
-
-
 --- abstract
 
-TODO Abstract
+TODO
 
 --- middle
 
 # Introduction
 
-TODO Introduction
+TODO
 
+# Structure
 
-# Conventions and Definitions
+TODO
 
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
-"SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this
-document are to be interpreted as described in BCP 14 {{RFC2119}} {{!RFC8174}}
-when, and only when, they appear in all capitals, as shown here.
+## Tables
 
+## Cells
+
+### Value Cells
+
+### Delegate Cells
+
+## Root Key Listing
+
+## Delegation
+
+## Merkle Tree
+
+# Consensus
+
+TODO
+
+## Protocol
+
+## Enforced Transitions
+
+# Representative Use Cases
+
+TODO
+
+## DNS Delegation
+
+## IP Address Delegation
 
 # Security Considerations
 
-TODO Security
-
-
-# IANA Considerations
-
-This document has no IANA actions.
-
-
+TODO
 
 --- back
 
 # Acknowledgments
 {:numbered="false"}
 
-TODO acknowledge.
+TODO
 
