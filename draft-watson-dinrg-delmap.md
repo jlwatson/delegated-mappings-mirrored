@@ -40,6 +40,12 @@ author:
 
 normative:
   RFC4506:
+  Trillian:
+    title: "Trillian: General Transparency"
+    author: 
+      -
+        org: Google
+    target: https://github.com/google/trillian
 
 informative:
   RFC1034:
@@ -57,6 +63,19 @@ informative:
     target: https://wiki.mozilla.org/Security/Binary_Transparency
     date: 2017
   I-D.mazieres-dinrg-scp:
+  PBFT:
+    title: Practical Byzantine Fault Tolerance
+    author:
+      -
+        ins: M. Castro
+        name: Miguel Castro
+        org: MIT
+      -
+        ins: B. Liskov
+        name: Barbara Liskov
+        org: MIT
+    target: http://pmg.csail.mit.edu/papers/osdi99.pdf
+    date: 1999
 
 --- abstract
 
@@ -91,7 +110,7 @@ which the delegee is the sole authority. Thus, the delegating entity may not
 make modifications to a delegated table and need not be trusted by the delegee.
 The namespace segment may be further delegated to others.
 
-The delegation tree maintains security and consistency through a distributed
+The delegation trees maintain security and consistency through a distributed
 consensus algorithm. When a participant receives an update, they verify and
 submit it to the consensus layer, after which, if successful, the change is
 applied to its associated table. Clients may query any number of trusted servers and expect the result to be correct barring widespread collusion.
@@ -106,8 +125,8 @@ find that federated protocols such as the Stellar Consensus Protocol
 participation, broad diversity of interests among consensus participants, and
 a measure of accountability for submitting deceptive updates. 
 
-This document specifies the structure of the delegation tree and its
-interface with a consensus protocol implementation.
+This document specifies the structure for authenticated mapping management and
+its interface with a consensus protocol implementation.
 
 # Structure
 
@@ -147,9 +166,7 @@ The public key of the cell's owner (e.g. the email account holder, the zone
 manager, etc.) is also included, as well as a signature authenticating the
 current version of the cell. The cell must be signed either by the `owner_key`,
 or in some cases, the authority of the table containing the cell, as is
-described below. The cell owner may validate any modifications to the cell's
-value or rotate their public key at any time by signing the transition with the
-old key.
+described below. The cell owner may rotate their public key at any time by signing the transition with the old key.
 
 ~~~
     struct valuecell {
@@ -171,7 +188,7 @@ create.
 ~~~
     struct delegatecell {
         opaque namespace<>;
-        publickey *delegee;
+        publickey delegee;
         signature authority_sig;  /* Delegator only */
     };
 ~~~
@@ -259,44 +276,108 @@ for an email service provider), "flat" delegation rules are used.
 
 ## Root Key Listing
 
+Each delegation tree, one per namespace, is rooted by a public key stored in a
+flat root key listing. Well-known application identifier strings denote the
+namespace which the control; the associated namespace root keys form the
+starting point for lookups. We describe below how lookups can be accomplished
+on the delegation trees.
+
 ~~~
-/* */
-struct tableentry {
-    publickey authority; /* */
-    table *delegations;  /* */
-}
+    struct rootentry {
+        publickey namespace_root_key;
+        string application_identifier<>;
+        signature listing_sig;
+    }
 
-/* */
-struct tables {
-    tableentry entries<>; /* */
-}
+    struct rootlisting {
+        rootentry roots<>;
+    }
 ~~~
 
-Adding to the root listing is by ???. No one knows yet.
+A significant open question is how to properly administer entries in this
+listing, since a strong authority, such as a single root key, can easily
+protect the listing from spam and malicious changes, but raises important
+concerns about censorship resilience and potential compromise. A federated
+approach to management is more in line with the spirit of this draft but opens
+the door for counter-productive participation. In the `rootentry` description
+above, we allow for either a root signing key to authenticate mappings, or
+first-come-first-served self-signed entries. In either case, no more than one
+key may control the namespace for a specific application identifier.
 
-## Merkle Tree
+## Datastructure
 
-We can use the Trillian implementation _if_ we can uniquely identify tables by
-name --> root key + path of keys down to the delegation. Thus, to get to a
-table, you have to perform a log-time lookup procedure during which it is
-impossible to reach an entry not on the proper chain (hashes of a key chain
-should be hard to guess). Also helps us validate delegation during consensus
-(discussed later) Thus, the virtual structure (tree of tables) is different
-from the actual structure (leaf-only Merkle tree).
+Delegation trees are stored in a Merkle hash tree, described in detail in
+{{RFC6962}}. In particular, it enables efficient lookups and logarithmic proofs
+of existence in the tree, and prevents equivocation between different
+participants. Specifically, we can leverage Google's {{Trillian}} Merkle tree
+implementation -- on top of which Certificate Transparency is built -- in map
+mode, which manages arbitrary key-value pairs at scale. This requires
+flattening the delegation trees such that each table may be looked up, while
+ensuring that a full lookup from the application root be made for each mapping.
+Given a `rootentry`, the corresponding table in the Merkle tree can be found
+with this concatenation:
 
-On delegation, the change should contain (1) proof (i.e. hash path to root for updated table), (2) the updated table delta, (3) the new table (empty) to add to the tree with the right key.
+~~~
+ root_table_name = app_id || namespace_root_key
+~~~
 
-Then:
-* explain how to hash up the tree / get an existence proof
-* what do we need to perform consensus? an added/updated cell and the hash path to the root
+Similarly, tables for delegated namespaces are found at:
+
+~~~
+ root_table_name || delegee_key_1 || ... || delegee_key_n
+~~~
+
+Consensus is performed on the Merkle tree containing the flattened collection
+of tables.
 
 # Consensus
 
-TODO
+Safety is ensured by reaching distributed consensus on the state of the tree.
+The general nature of a Merkle tree as discussed in the previous section
+enables almost any consensus protocol to support delegated mappings, with
+varying guarantees on the conditions under which safety is maintained and
+different trust implications. For example, a deployment on a cluster of nodes
+running a classic Byzantine Fault Tolerant consensus protocol such as {{PBFT}}
+requires a limited, static membership and can tolerate compromises in up to a
+third of its nodes. In comparison, proof-of-work schemes including many
+cryptocurrencies have open membership but rely on economic incentives and
+distributed control of hashing power to provide safety, and federated consensus
+algorithms ({{I-D.mazieres-dinrg-scp}}) combine dynamic members with real-world
+trust relationships but require careful configuration. Determining which
+scheme, if any, is the "correct" protocol to support authenticated delegation
+is an open question.
 
-## Protocol
+## Validation
 
-## Enforced Transitions
+Upon any modification to the tree -- addition of a new root entry, table or
+cell, or modification of an existing cell -- the submitted change to the
+consensus layer should contain:
+
+(1) the updated or newly-created table, and
+
+(2) a Merkle proof containing all the hashes necessary to validate the new root
+tree hash.
+
+Finally, each node participating in consensus must confirm before voting for the
+update that:
+
+(1) the Merkle proof is correct, and
+
+(2a) an addition to the root key listing is correctly signed by an authorized
+party, or
+
+(2b) a new delegation is correctly authenticated, consists of a valid namespace
+value owned by the delegator, follows the table-specific delegation rules, and
+creates an empty table at the correct key in the tree, or
+
+(2c) a new value cell is correctly authenticated and belongs to the signing
+authority's namespace, and has no conflicts in its table, or
+
+(2d) a cell update is properly authenticated and, if proposed by the table
+authority, has an expired commitment timestamp.
+
+Only after a round of the consensus protocol is successful are the changes
+exposed to client lookups.
 
 # Security Considerations
 
