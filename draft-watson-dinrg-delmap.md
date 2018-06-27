@@ -25,7 +25,7 @@ author:
     ins: C. Man
     name: Colin Man
     organization: Stanford University
-    email: colinman@stanford.edu
+    email: colinman@cs.stanford.edu
     street: 353 Serra Mall
     city: Stanford, CA 94305
     country: US
@@ -100,6 +100,14 @@ to secure these mechanisms: Certificate Transparency (CT) {{RFC6962}} for
 misissued certificates, DNSSEC {{RFC4033}}, and binary transparency for
 verifiable executables {{bin-transparency}}.
 
+<!-- I wonder if it would be useful to talk about the kinds of mappings we can do
+and then kinds that wouldn't really make sense with our system. We rely on some kind of
+inherent relationship between the lookup key and the authority (i.e. from the lookup key: 
+DNS name, IP prefix, etc., we can determine the authority that can "delegate" that section)
+For lookups where there is no such correlation (for example, looking up CA certs), it's not clear
+how we would be able to trace throught the table to find the particular CA given a domain
+lookup key. This seems like a limitation that we should highlight (or I might be missing something)
+-->
 Presented in this draft is a generalized mechanism for authenticating and
 managing such mappings. Specifically, we describe the structure for a
 distributed directory with explicit support for delegation. Certain known
@@ -275,6 +283,8 @@ the majority of use cases:
         FLAT = 2
     };
 ~~~
+<!-- Should we talk about how the type is used? (in consensus layer or in lookup),
+at which layer? -->
 
 Prefix-based delegation, such as in an IP delegation use case, requires every
 table cell value to be prefixed by the table namespace, and no cell value can
@@ -285,8 +295,8 @@ for an email service provider), "flat" delegation rules are used.
 ## Root Key Listing
 
 Each delegation tree, one per namespace, is rooted by a public key stored in a
-flat root key listing. Well-known application identifier strings denote the
-namespace which the control; the associated namespace root keys form the
+flat root key listing, which is the entry point for lookup operations. Well-known application identifier strings denote the
+namespace which they control; the associated namespace root keys form the
 starting point for lookups. We describe below how lookups can be accomplished
 on the delegation trees.
 
@@ -314,11 +324,15 @@ key may control the namespace for a specific application identifier.
 
 ## Data Structure
 
+<!-- Change all instances of delegation tree to delegation table? Seems more
+consistent with the rest of the draft -->
 Delegation trees are stored in a Merkle hash tree, described in detail in
 {{RFC6962}}. In particular, it enables efficient lookups and logarithmic proofs
 of existence in the tree, and prevents equivocation between different
 participants. Specifically, we can leverage Google's {{Trillian}} Merkle tree
-implementation -- on top of which Certificate Transparency is built -- in map
+<!-- I think CT is not built on top of Trillian, though Trillian is meant
+ to be a more general version of CT -->
+implementation -- on top of which Certificate Transparency is built -- in map 
 mode, which manages arbitrary key-value pairs at scale. This requires
 flattening the delegation trees such that each table may be looked up, while
 ensuring that a full lookup from the application root be made for each mapping.
@@ -331,6 +345,12 @@ with this concatenation:
 
 Similarly, tables for delegated namespaces are found at:
 
+<!-- If I understand correctly, the table itself has to be a Merkle tree,right?
+So there are a bunch of trees for each table and then one big tree that brings all
+the trees together. Would it be a good idea to separate the Merkle part from the 
+lookup part? Could we build the meta-tree with just a `delegee_public_key` to 
+`delegee_table_hash` mapping?
+-->
 ~~~
  root_table_name || delegee_key_1 || ... || delegee_key_n
 ~~~
@@ -365,6 +385,10 @@ modification to the tree -- addition of a new root entry, table or cell, or
 modification of an existing cell -- the submitted change to the consensus layer
 should contain:
 
+<!-- Should we define valid operations? i.e. add entry, remove entry, 
+change key (would this require duplicating a table if it is delegee key? 
+if yes, should we add a duplicate operation instead?) -->
+
 (1) the updated or newly-created table, and
 
 (2) a Merkle proof containing all the hashes necessary to validate the new root
@@ -378,9 +402,11 @@ update that:
 (2a) an addition to the root key listing is correctly signed by an authorized
 party, or
 
+<!-- maybe we should split this section into delegee/value cells to be extra clear? -->
 (2b) a new delegation is correctly authenticated, consists of a valid namespace
 value owned by the delegator, follows the table-specific delegation rules, and
 creates an empty table at the correct key in the tree, or
+<!-- Or if there is a collision (determined by table type)? (with either value cell or delegee cell)-->
 
 (2c) a new value cell is correctly authenticated and belongs to the signing
 authority's namespace, and has no conflicts in its table, or
