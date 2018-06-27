@@ -25,7 +25,7 @@ author:
     ins: C. Man
     name: Colin Man
     organization: Stanford University
-    email: colinman@stanford.edu
+    email: colinman@cs.stanford.edu
     street: 353 Serra Mall
     city: Stanford, CA 94305
     country: US
@@ -116,7 +116,7 @@ which the delegee is the sole authority. Thus, the delegating entity may not
 make modifications to a delegated table and need not be trusted by the delegee.
 The namespace segment may be further delegated to others.
 
-The delegation trees maintain security and consistency through a distributed
+The delegation tables maintain security and consistency through a distributed
 consensus algorithm. When a participant receives an update, they verify and
 submit it to the consensus layer, after which, if successful, the change is
 applied to its associated table. Clients may query any number of trusted
@@ -155,7 +155,7 @@ XDR [RFC4506].
 
 ## Cells
 
-Cells are the basic unit of the delegation tree. In general, they define an
+Cells are the basic unit of the delegation structure. In general, they define an
 authenticated mapping record that may be queried by clients. We describe two
 types of cells:
 
@@ -276,19 +276,29 @@ the majority of use cases:
     };
 ~~~
 
-Prefix-based delegation, such as in an IP delegation use case, requires every
-table cell value to be prefixed by the table namespace, and no cell value can
+The table type informs the validation procedure when performing consensus; all
+new or updated delegated namespaces must follow the proper format for their
+table. Prefix-based delegation, such as in an IP delegation use case, requires
+every table cell value to be prefixed by the table namespace, and no cell value
 be a prefix of another cell value. Similar rules apply to suffix-based
 delegation. In cases where arbitrary values may be mapped (e.g. account names
 for an email service provider), "flat" delegation rules are used.
 
+The delegation rule for a table also determine valid lookup behavior. Given a
+particular lookup key, `PREFIX`-type tables should have at most one entry whose
+key is a prefix of the query. Likewise, `SUFFIX` tables have at most one entry
+whose key is a suffix of the query. As an example, lookup on `irtf.org` in a
+table of domain names with suffix-based delegation rules may return entries
+with keys `irtf.org`, `tf.org`, `.org`, etc., but the presence of more than one
+of these indicates two faulty delegations that control the same namespace.
+
 ## Root Key Listing
 
-Each delegation tree, one per namespace, is rooted by a public key stored in a
-flat root key listing. Well-known application identifier strings denote the
-namespace which the control; the associated namespace root keys form the
-starting point for lookups. We describe below how lookups can be accomplished
-on the delegation trees.
+Each linked group of delegation tables for a particular namespace is rooted by
+a public key stored in a flat root key listing, which is the entry point for
+lookup operations.  Well-known application identifier strings denote the
+namespace they control. We describe below how lookups can be accomplished on
+the mappings.
 
 ~~~
     struct rootentry {
@@ -314,16 +324,16 @@ key may control the namespace for a specific application identifier.
 
 ## Data Structure
 
-Delegation trees are stored in a Merkle hash tree, described in detail in
+Delegation tables are stored in a Merkle hash tree, described in detail in
 {{RFC6962}}. In particular, it enables efficient lookups and logarithmic proofs
 of existence in the tree, and prevents equivocation between different
 participants. Specifically, we can leverage Google's {{Trillian}} Merkle tree
-implementation -- on top of which Certificate Transparency is built -- in map
-mode, which manages arbitrary key-value pairs at scale. This requires
-flattening the delegation trees such that each table may be looked up, while
-ensuring that a full lookup from the application root be made for each mapping.
-Given a `rootentry`, the corresponding table in the Merkle tree can be found
-with this concatenation:
+implementation which generalizes the datastructures used in Certificate
+Transparency. In map mode, the tree can manages arbitrary key-value pairs at
+scale. This requires flattening the delegation links such that each table may
+be queried, while ensuring that a full lookup from the application root be made
+for each mapping.  Given a `rootentry`, the corresponding table in the Merkle
+tree can be found with this concatenation:
 
 ~~~
  root_table_name = app_id || namespace_root_key
@@ -336,7 +346,10 @@ Similarly, tables for delegated namespaces are found at:
 ~~~
 
 Consensus is performed on the Merkle tree containing the flattened collection
-of tables.
+of tables. While it is possible to reach consensus on entire tables when a cell
+is modified, this approach does not scale well with the size of the table.
+Therefore, each table should maintain its entries in its own internal Merkle
+tree and perform consensus on Merkle proofs for the modified cell.
 
 # Consensus
 
@@ -370,33 +383,40 @@ should contain:
 (2) a Merkle proof containing all the hashes necessary to validate the new root
 tree hash.
 
-Finally, each node participating in consensus must confirm before voting for the
-update that:
+Finally, each node participating in consensus must confirm before
+voting for the update that:
 
 (1) the Merkle proof is correct, and
 
-(2a) an addition to the root key listing is correctly signed by an authorized
+(2) an addition to the root key listing is correctly signed by an authorized
 party, or
 
-(2b) a new delegation is correctly authenticated, consists of a valid namespace
-value owned by the delegator, follows the table-specific delegation rules, and
-creates an empty table at the correct key in the tree, or
+(3) for delegate cells:
+  
+  (3a) a new delegation is correctly authenticated,
+  (3b) the cell contains a valid namespace owned by the delegator,
+  (3c) the delegation follows the table-specified delegation rules, and
+  (3d) the delegated table is mapped in the Merkle map by the proper key
 
-(2c) a new value cell is correctly authenticated and belongs to the signing
-authority's namespace, and has no conflicts in its table, or
+(4) for value cells:
 
-(2d) a cell update is properly authenticated and, if proposed by the table
-authority, has an expired commitment timestamp.
+  (4a) a new mapping is correctly authenticated,
+  (4b) the value belongs to the signing authority's namespace, and
+  (4c) does not conflict with other cells in its table
+
+(5) and for all updates, if proposed by the table authority, the cell contains
+an expired commitment timestamp.
 
 Only after a round of the consensus protocol is successful are the changes
 exposed to client lookups.
 
 # Security Considerations
 
-The security of the delegation trees is primarily tied to the safety properties
-of the underlying consensus layer. Further, incorrect use of the public key
-infrastructure authenticating each mapping or compromise of a namespace root
-key can endanger mappings delegated by the key after their commitments expire.
+The security of the delegation tables is primarily tied to the safety
+properties of the underlying consensus layer. Further, incorrect use of the
+public key infrastructure authenticating each mapping or compromise of a
+namespace root key can endanger mappings delegated by the key after their
+commitments expire.
 
 --- back
 
