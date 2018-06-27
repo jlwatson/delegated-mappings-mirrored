@@ -15,8 +15,14 @@ Expires: December 28, 2018                                     J. Watson
 
 Abstract
 
-   TODO Come back and finish this after the rest of the document is
-   written.
+   Authoritative mappings are commonplace (DNS resolution, TLS
+   certificates, etc.) but centrally served and lack a common interface.
+   This draft specifies a generalized scheme for authenticating mappings
+   with a structure that explicitly supports delegation.  The resulting
+   data is secured through any general purpose distributed consensus
+   protocol; clients may query the local state of any number of
+   participants and receive the correct result barring a compromise of
+   the consensus layer.
 
 Status of This Memo
 
@@ -44,12 +50,6 @@ Copyright Notice
    Provisions Relating to IETF Documents
    (https://trustee.ietf.org/license-info) in effect on the date of
    publication of this document.  Please review these documents
-   carefully, as they describe your rights and restrictions with respect
-   to this document.  Code Components extracted from this document must
-   include Simplified BSD License text as described in Section 4.e of
-   the Trust Legal Provisions and are provided without warranty as
-   described in the Simplified BSD License.
-
 
 
 
@@ -58,6 +58,12 @@ Li, et al.              Expires December 28, 2018               [Page 1]
 Internet-Draft             Delegated Mappings                  June 2018
 
 
+   carefully, as they describe your rights and restrictions with respect
+   to this document.  Code Components extracted from this document must
+   include Simplified BSD License text as described in Section 4.e of
+   the Trust Legal Provisions and are provided without warranty as
+   described in the Simplified BSD License.
+
 Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
@@ -65,15 +71,15 @@ Table of Contents
      2.1.  Cells . . . . . . . . . . . . . . . . . . . . . . . . . .   3
      2.2.  Tables  . . . . . . . . . . . . . . . . . . . . . . . . .   5
      2.3.  Root Key Listing  . . . . . . . . . . . . . . . . . . . .   6
-     2.4.  Datastructure . . . . . . . . . . . . . . . . . . . . . .   6
+     2.4.  Data Structure  . . . . . . . . . . . . . . . . . . . . .   7
    3.  Consensus . . . . . . . . . . . . . . . . . . . . . . . . . .   7
-     3.1.  Validation  . . . . . . . . . . . . . . . . . . . . . . .   7
+     3.1.  Validation  . . . . . . . . . . . . . . . . . . . . . . .   8
    4.  Security Considerations . . . . . . . . . . . . . . . . . . .   8
-   5.  References  . . . . . . . . . . . . . . . . . . . . . . . . .   8
-     5.1.  Normative References  . . . . . . . . . . . . . . . . . .   8
-     5.2.  Informative References  . . . . . . . . . . . . . . . . .   8
-   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .   9
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .   9
+   5.  References  . . . . . . . . . . . . . . . . . . . . . . . . .   9
+     5.1.  Normative References  . . . . . . . . . . . . . . . . . .   9
+     5.2.  Informative References  . . . . . . . . . . . . . . . . .   9
+   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .  10
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  10
 
 1.  Introduction
 
@@ -100,12 +106,6 @@ Table of Contents
    of the authority's namespace to another entity with a given public
    key, along with a guarantee on that delegation's lifetime.  Each
    delegation forms a new table, for which the delegee is the sole
-   authority.  Thus, the delegating entity may not make modifications to
-   a delegated table and need not be trusted by the delegee.  The
-   namespace segment may be further delegated to others.
-
-   The delegation trees maintain security and consistency through a
-   distributed consensus algorithm.  When a participant receives an
 
 
 
@@ -114,6 +114,12 @@ Li, et al.              Expires December 28, 2018               [Page 2]
 Internet-Draft             Delegated Mappings                  June 2018
 
 
+   authority.  Thus, the delegating entity may not make modifications to
+   a delegated table and need not be trusted by the delegee.  The
+   namespace segment may be further delegated to others.
+
+   The delegation trees maintain security and consistency through a
+   distributed consensus algorithm.  When a participant receives an
    update, they verify and submit it to the consensus layer, after
    which, if successful, the change is applied to its associated table.
    Clients may query any number of trusted servers and expect the result
@@ -157,18 +163,17 @@ Internet-Draft             Delegated Mappings                  June 2018
    define an authenticated mapping record that may be queried by
    clients.  We describe two types of cells:
 
-       enum celltype {
-           VALUE = 0,
-           DELEGATE = 1
-       };
-
-
 
 
 Li, et al.              Expires December 28, 2018               [Page 3]
 
 Internet-Draft             Delegated Mappings                  June 2018
 
+
+       enum celltype {
+           VALUE = 0,
+           DELEGATE = 1
+       };
 
    Value cells store individual mapping entries.  They resolve a lookup
    key to an arbitrary value, for example, an encryption key associated
@@ -213,11 +218,6 @@ Internet-Draft             Delegated Mappings                  June 2018
    creating the cell that the mapping will remain valid until at least
    the specified time.  Therefore, while value cell owners may modify
    their cell at any moment, the authority cannot successfully change
-   (or remove) the cell until its commitment expires.  Similarly,
-   delegated namespaces are guaranteed to be valid until the commitment
-   timestamp.  This creates a tradeoff between protecting delegees from
-   arbitrary delegator action and allowing simple reconfiguration that
-   can be customized for the use case.
 
 
 
@@ -225,6 +225,12 @@ Li, et al.              Expires December 28, 2018               [Page 4]
 
 Internet-Draft             Delegated Mappings                  June 2018
 
+
+   (or remove) the cell until its commitment expires.  Similarly,
+   delegated namespaces are guaranteed to be valid until the commitment
+   timestamp.  This creates a tradeoff between protecting delegees from
+   arbitrary delegator action and allowing simple reconfiguration that
+   can be customized for the use case.
 
        union innercell switch (celltype type) {
        case VALUE:
@@ -265,14 +271,8 @@ Internet-Draft             Delegated Mappings                  June 2018
    participating node of the particular delegation rules to apply to
    table entries.
 
-       struct table {
-           tabletype type;
-           tableentry entries<>;
-       };
 
-   While there exist more delegation mechanisms than we could reasonably
-   discuss in this draft, we initially propose three general-purpose
-   schemes that cover the majority of use cases:
+
 
 
 
@@ -281,6 +281,15 @@ Li, et al.              Expires December 28, 2018               [Page 5]
 
 Internet-Draft             Delegated Mappings                  June 2018
 
+
+       struct table {
+           tabletype type;
+           tableentry entries<>;
+       };
+
+   While there exist more delegation mechanisms than we could reasonably
+   discuss in this draft, we initially propose three general-purpose
+   schemes that cover the majority of use cases:
 
        enum tabletype {
            PREFIX = 0,
@@ -321,15 +330,6 @@ Internet-Draft             Delegated Mappings                  June 2018
    the spirit of this draft but opens the door for counter-productive
    participation.  In the "rootentry" description above, we allow for
    either a root signing key to authenticate mappings, or first-come-
-   first-served self-signed entries.  In either case, no more than one
-   key may control the namespace for a specific application identifier.
-
-2.4.  Datastructure
-
-   Delegation trees are stored in a Merkle hash tree, described in
-   detail in [RFC6962].  In particular, it enables efficient lookups and
-   logarithmic proofs of existence in the tree, and prevents
-   equivocation between different participants.  Specifically, we can
 
 
 
@@ -338,6 +338,15 @@ Li, et al.              Expires December 28, 2018               [Page 6]
 Internet-Draft             Delegated Mappings                  June 2018
 
 
+   first-served self-signed entries.  In either case, no more than one
+   key may control the namespace for a specific application identifier.
+
+2.4.  Data Structure
+
+   Delegation trees are stored in a Merkle hash tree, described in
+   detail in [RFC6962].  In particular, it enables efficient lookups and
+   logarithmic proofs of existence in the tree, and prevents
+   equivocation between different participants.  Specifically, we can
    leverage Google's [Trillian] Merkle tree implementation - on top of
    which Certificate Transparency is built - in map mode, which manages
    arbitrary key-value pairs at scale.  This requires flattening the
@@ -374,16 +383,7 @@ Internet-Draft             Delegated Mappings                  June 2018
    the "correct" protocol to support authenticated delegation is an open
    question.
 
-3.1.  Validation
 
-   Upon any modification to the tree - addition of a new root entry,
-   table or cell, or modification of an existing cell - the submitted
-   change to the consensus layer should contain:
-
-   (1) the updated or newly-created table, and
-
-   (2) a Merkle proof containing all the hashes necessary to validate
-   the new root tree hash.
 
 
 
@@ -393,6 +393,22 @@ Li, et al.              Expires December 28, 2018               [Page 7]
 
 Internet-Draft             Delegated Mappings                  June 2018
 
+
+3.1.  Validation
+
+   Incorrect (potentially malicious) updates to the Merkle tree should
+   be rejected by nodes participating in consensus.  Given the limited
+   set of delegation schemes presented in the previous section, each
+   node can apply the same validation procedure without requiring
+   application-specific knowledge.  Upon any modification to the tree -
+   addition of a new root entry, table or cell, or modification of an
+   existing cell - the submitted change to the consensus layer should
+   contain:
+
+   (1) the updated or newly-created table, and
+
+   (2) a Merkle proof containing all the hashes necessary to validate
+   the new root tree hash.
 
    Finally, each node participating in consensus must confirm before
    voting for the update that:
@@ -418,7 +434,21 @@ Internet-Draft             Delegated Mappings                  June 2018
 
 4.  Security Considerations
 
-   TODO
+   The security of the delegation trees is primarily tied to the safety
+   properties of the underlying consensus layer.  Further, incorrect use
+   of the public key infrastructure authenticating each mapping or
+   compromise of a namespace root key can endanger mappings delegated by
+   the key after their commitments expire.
+
+
+
+
+
+
+Li, et al.              Expires December 28, 2018               [Page 8]
+
+Internet-Draft             Delegated Mappings                  June 2018
+
 
 5.  References
 
@@ -442,13 +472,6 @@ Internet-Draft             Delegated Mappings                  June 2018
               Barry, N., Losa, G., Mazieres, D., McCaleb, J., and S.
               Polu, "The Stellar Consensus Protocol (SCP)", draft-
               mazieres-dinrg-scp-03 (work in progress), June 2018.
-
-
-
-Li, et al.              Expires December 28, 2018               [Page 8]
-
-Internet-Draft             Delegated Mappings                  June 2018
-
 
    [PBFT]     Castro, M. and B. Liskov, "Practical Byzantine Fault
               Tolerance", 1999,
@@ -474,13 +497,28 @@ Internet-Draft             Delegated Mappings                  June 2018
               RFC 6960, DOI 10.17487/RFC6960, June 2013,
               <https://www.rfc-editor.org/info/rfc6960>.
 
+
+
+
+
+Li, et al.              Expires December 28, 2018               [Page 9]
+
+Internet-Draft             Delegated Mappings                  June 2018
+
+
    [RFC6962]  Laurie, B., Langley, A., and E. Kasper, "Certificate
               Transparency", RFC 6962, DOI 10.17487/RFC6962, June 2013,
               <https://www.rfc-editor.org/info/rfc6962>.
 
 Acknowledgments
 
-   TODO
+   We are grateful for the contributions and feedback on design and
+   applicability by David Mazieres, as well as help and feedback from
+   the IRTF DIN research group, including Dirk Kutscher and Melinda
+   Shore.
+
+   This work was supported by The Stanford Center For Blockchain
+   Research.
 
 Authors' Addresses
 
@@ -491,19 +529,6 @@ Authors' Addresses
    US
 
    Email: sydney@eff.org
-
-
-
-
-
-
-
-
-
-
-Li, et al.              Expires December 28, 2018               [Page 9]
-
-Internet-Draft             Delegated Mappings                  June 2018
 
 
    Colin Man
@@ -522,31 +547,6 @@ Internet-Draft             Delegated Mappings                  June 2018
    US
 
    Email: jlwatson@cs.stanford.edu
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

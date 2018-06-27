@@ -79,7 +79,13 @@ informative:
 
 --- abstract
 
-TODO Come back and finish this after the rest of the document is written.
+Authoritative mappings are commonplace (DNS resolution, TLS certificates, etc.)
+but centrally served and lack a common interface. This draft specifies a
+generalized scheme for authenticating mappings with a structure that explicitly
+supports delegation. The resulting data is secured through any general purpose
+distributed consensus protocol; clients may query the local state of any number
+of participants and receive the correct result barring a compromise of the
+consensus layer.
 
 --- middle
 
@@ -98,7 +104,7 @@ Presented in this draft is a generalized mechanism for authenticating and
 managing such mappings. Specifically, we describe the structure for a
 distributed directory with explicit support for delegation. Certain known
 entities are assigned namespaces, loosely associated with a service provided by
-that entity (i.e domain prefixes for DNS Authorities).  Under that namespace,
+that entity (i.e domain prefixes for DNS Authorities). Under that namespace,
 are authorized to create mapping records, or _cells_, a unit of ownership in
 the service. A namespace's cells are grouped into a logical unit we term a
 _table_.
@@ -113,7 +119,8 @@ The namespace segment may be further delegated to others.
 The delegation trees maintain security and consistency through a distributed
 consensus algorithm. When a participant receives an update, they verify and
 submit it to the consensus layer, after which, if successful, the change is
-applied to its associated table. Clients may query any number of trusted servers and expect the result to be correct barring widespread collusion.
+applied to its associated table. Clients may query any number of trusted
+servers and expect the result to be correct barring widespread collusion.
 
 The risk of successful attacks on this system vary based on the consensus
 scheme used. Detailed descriptions of specific protocol implementations are out
@@ -166,7 +173,8 @@ The public key of the cell's owner (e.g. the email account holder, the zone
 manager, etc.) is also included, as well as a signature authenticating the
 current version of the cell. The cell must be signed either by the `owner_key`,
 or in some cases, the authority of the table containing the cell, as is
-described below. The cell owner may rotate their public key at any time by signing the transition with the old key.
+described below. The cell owner may rotate their public key at any time by
+signing the transition with the old key.
 
 ~~~
     struct valuecell {
@@ -304,7 +312,7 @@ above, we allow for either a root signing key to authenticate mappings, or
 first-come-first-served self-signed entries. In either case, no more than one
 key may control the namespace for a specific application identifier.
 
-## Datastructure
+## Data Structure
 
 Delegation trees are stored in a Merkle hash tree, described in detail in
 {{RFC6962}}. In particular, it enables efficient lookups and logarithmic proofs
