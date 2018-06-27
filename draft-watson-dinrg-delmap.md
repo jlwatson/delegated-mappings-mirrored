@@ -349,9 +349,13 @@ is an open question.
 
 ## Validation
 
-Upon any modification to the tree -- addition of a new root entry, table or
-cell, or modification of an existing cell -- the submitted change to the
-consensus layer should contain:
+Incorrect (potentially malicious) updates to the Merkle tree should be rejected
+by nodes participating in consensus. Given the limited set of delegation
+schemes presented in the previous section, each node can apply the same
+validation procedure without requiring application-specific knowledge. Upon any
+modification to the tree -- addition of a new root entry, table or cell, or
+modification of an existing cell -- the submitted change to the consensus layer
+should contain:
 
 (1) the updated or newly-created table, and
 
@@ -381,12 +385,19 @@ exposed to client lookups.
 
 # Security Considerations
 
-TODO
+The security of the delegation trees is primarily tied to the safety properties
+of the underlying consensus layer. Further, incorrect use of the public key
+infrastructure authenticating each mapping or compromise of a namespace root
+key can endanger mappings delegated by the key after their commitments expire.
 
 --- back
 
 # Acknowledgments
 {:numbered="false"}
 
-TODO
+We are grateful for the contributions and feedback on design and applicability
+by David Mazieres, as well as help and feedback from the IRTF DIN research
+group, including Dirk Kutscher and Melinda Shore.
+
+This work was supported by The Stanford Center For Blockchain Research.
 
