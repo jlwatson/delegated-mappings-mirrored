@@ -1,5 +1,5 @@
 ---
-title: Delegated Authenticated Mappings
+title: Delegated Distributed Mappings
 abbrev: Delegated Mappings
 docname: draft-watson-dinrg-delmap-00
 category: exp
@@ -48,11 +48,8 @@ normative:
     target: https://github.com/google/trillian
 
 informative:
-  RFC1034:
-  RFC6960:
-  RFC4880:
+  RFC7249:
   RFC6962:
-  RFC4033:
   bin-transparency:
     title: Security/Binary Transparency
     author:
@@ -79,35 +76,36 @@ informative:
 
 --- abstract
 
-Authoritative mappings are commonplace (DNS resolution, TLS certificates, etc.)
-but centrally served and lack a common interface. This draft specifies a
-generalized scheme for authenticating mappings with a structure that explicitly
-supports delegation. The resulting data is secured through any general purpose
-distributed consensus protocol; clients may query the local state of any number
-of participants and receive the correct result barring a compromise of the
-consensus layer.
+Delegated namespaces (domain names, IP address allocation, etc.) underpin
+almost every Internet entity but are centrally managed, unilaterally revokable,
+and lack a common interface. This draft specifies a generalized scheme for
+delegation with a structure that supports explicit delegation guarantees. The
+resulting data may be secured by any general purpose distributed consensus
+protocol; clients may query the local state of any number of participants and
+receive the correct result barring a compromise of the consensus layer.
 
 --- middle
 
 # Introduction
 
-Internet applications rely heavily on authoritative translation to function
-correctly. Typical services might resolve domain mappings using DNS
-{{RFC1034}}, verify the validity of X.509 certificates {{RFC6960}}, or send
-encrypted email {{RFC4880}}, among others. Serving incorrect and/or malicious
-mappings can easily compromise infrastructure security, thus prompting efforts
-to secure these mechanisms: Certificate Transparency (CT) {{RFC6962}} for
-misissued certificates, DNSSEC {{RFC4033}}, and binary transparency for
-verifiable executables {{bin-transparency}}.
+Internet entities rely heavily on delegated namespaces to function properly.
+Typical web services might have been delegated a domain name under which they
+host the entirety of their public-facing content, or obtain a public IP range
+from their ISP, acquiring a portion of a namespace originally assigned by an
+Internet Numbers Registry {{RFC7249}}. An enormous amount of economic value is
+therefore placed in these assignments, or mappings, yet they are dangerously
+ephemeral. Delgating authorities can unilateraly revoke and replace the
+assignments they've made (maliciously or accidentally), compromising
+infrastructure security.
 
-Presented in this draft is a generalized mechanism for authenticating and
-managing such mappings. Specifically, we describe the structure for a
-distributed directory with explicit support for delegation. Certain known
-entities are assigned namespaces, loosely associated with a service provided by
-that entity (i.e domain prefixes for DNS Authorities). Under that namespace,
-are authorized to create mapping records, or _cells_, a unit of ownership in
-the service. A namespace's cells are grouped into a logical unit we term a
-_table_.
+Presented in this draft is a generalized mechanism for delegating and managing
+such mappings. Specifically, we describe the structure for a distributed
+directory with support for delegation "commitments" that have an explicit
+duration. Certain known entities are assigned namespaces, loosely associated
+with a service provided by that entity (i.e domain prefixes for DNS
+Authorities). Under that namespace, are authorized to create mapping records,
+or _cells_, a unit of ownership in the service. A namespace's cells are grouped
+into a logical unit we term a _table_.
 
 Table cells may also explicitly document the delegation of a portion of the
 authority's namespace to another entity with a given public key, along with a
@@ -155,8 +153,8 @@ XDR [RFC4506].
 
 ## Cells
 
-Cells are the basic unit of the delegation structure. In general, they define an
-authenticated mapping record that may be queried by clients. We describe two
+Cells are the basic unit of the delegation structure. In general, they define
+an authenticated mapping record that may be queried by clients. We describe two
 types of cells:
 
 ~~~
@@ -170,7 +168,7 @@ Value cells store individual mapping entries. They resolve a lookup key to an
 arbitrary value, for example, an encryption key associated with an email
 address or a the address of an authoritative nameserver for a given DNS zone.
 The public key of the cell's owner (e.g. the email account holder, the zone
-manager, etc.) is also included, as well as a signature authenticating the
+manager) is also included, as well as a signature authenticating the
 current version of the cell. The cell must be signed either by the `owner_key`,
 or in some cases, the authority of the table containing the cell, as is
 described below. The cell owner may rotate their public key at any time by
@@ -238,8 +236,8 @@ Every cell is stored in a table, which groups all the mappings created by a
 single authority public key for a specific namespace. Individual cells are
 referenced by an application-specific label in a lookup table. Below, we allow
 for a single lookup key to reference a list of cells, for the sake of
-generality. The combination of a lookup key and a referenced cell value forms
-an _authenticated mapping_.
+generality. The combination of a lookup key and a referenced cell value forms a
+mapping.
 
 ~~~
     struct tableentry {
