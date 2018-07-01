@@ -5,24 +5,25 @@
 Network Working Group                                              S. Li
 Internet-Draft                                                       EFF
 Intended status: Experimental                                     C. Man
-Expires: December 29, 2018                                     J. Watson
+Expires: January 2, 2019                                       J. Watson
                                                      Stanford University
-                                                           June 27, 2018
+                                                           July 01, 2018
 
 
-                    Delegated Authenticated Mappings
+                     Delegated Distributed Mappings
                       draft-watson-dinrg-delmap-00
 
 Abstract
 
-   Authoritative mappings are commonplace (DNS resolution, TLS
-   certificates, etc.) but centrally served and lack a common interface.
-   This draft specifies a generalized scheme for authenticating mappings
-   with a structure that explicitly supports delegation.  The resulting
-   data is secured through any general purpose distributed consensus
-   protocol; clients may query the local state of any number of
-   participants and receive the correct result barring a compromise of
-   the consensus layer.
+   Delegated namespaces (domain names, IP address allocation, etc.)
+   underpin almost every Internet entity but are centrally managed,
+   unilaterally revokable, and lack a common interface.  This draft
+   specifies a generalized scheme for delegation with a structure that
+   supports explicit delegation guarantees.  The resulting data may be
+   secured by any general purpose distributed consensus protocol;
+   clients may query the local state of any number of participants and
+   receive the correct result barring a compromise of the consensus
+   layer.
 
 Status of This Memo
 
@@ -39,7 +40,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on December 29, 2018.
+   This Internet-Draft will expire on January 2, 2019.
 
 Copyright Notice
 
@@ -49,15 +50,15 @@ Copyright Notice
    This document is subject to BCP 78 and the IETF Trust's Legal
    Provisions Relating to IETF Documents
    (https://trustee.ietf.org/license-info) in effect on the date of
-   publication of this document.  Please review these documents
 
 
 
-Li, et al.              Expires December 29, 2018               [Page 1]
+Li, et al.               Expires January 2, 2019                [Page 1]
 
-Internet-Draft             Delegated Mappings                  June 2018
+Internet-Draft             Delegated Mappings                  July 2018
 
 
+   publication of this document.  Please review these documents
    carefully, as they describe your rights and restrictions with respect
    to this document.  Code Components extracted from this document must
    include Simplified BSD License text as described in Section 4.e of
@@ -68,7 +69,7 @@ Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
    2.  Structure . . . . . . . . . . . . . . . . . . . . . . . . . .   3
-     2.1.  Cells . . . . . . . . . . . . . . . . . . . . . . . . . .   3
+     2.1.  Cells . . . . . . . . . . . . . . . . . . . . . . . . . .   4
      2.2.  Tables  . . . . . . . . . . . . . . . . . . . . . . . . .   5
      2.3.  Root Key Listing  . . . . . . . . . . . . . . . . . . . .   6
      2.4.  Data Structure  . . . . . . . . . . . . . . . . . . . . .   7
@@ -83,37 +84,40 @@ Table of Contents
 
 1.  Introduction
 
-   Internet applications rely heavily on authoritative translation to
-   function correctly.  Typical services might resolve domain mappings
-   using DNS [RFC1034], verify the validity of X.509 certificates
-   [RFC6960], or send encrypted email [RFC4880], among others.  Serving
-   incorrect and/or malicious mappings can easily compromise
-   infrastructure security, thus prompting efforts to secure these
-   mechanisms: Certificate Transparency (CT) [RFC6962] for misissued
-   certificates, DNSSEC [RFC4033], and binary transparency for
-   verifiable executables [bin-transparency].
+   Internet entities rely heavily on delegated namespaces to function
+   properly.  Typical web services might have been delegated a domain
+   name under which they host the entirety of their public-facing
+   content, or obtain a public IP range from their ISP, acquiring a
+   portion of a namespace originally assigned by an Internet Numbers
+   Registry [RFC7249].  An enormous amount of economic value is
+   therefore placed in these assignments, or mappings, yet they are
+   dangerously ephemeral.  Delgating authorities can unilateraly revoke
+   and replace the assignments they've made (maliciously or
+   accidentally), compromising infrastructure security.
 
-   Presented in this draft is a generalized mechanism for authenticating
-   and managing such mappings.  Specifically, we describe the structure
-   for a distributed directory with explicit support for delegation.
-   Certain known entities are assigned namespaces, loosely associated
-   with a service provided by that entity (i.e domain prefixes for DNS
-   Authorities).  Under that namespace, are authorized to create mapping
-   records, or _cells_, a unit of ownership in the service.  A
-   namespace's cells are grouped into a logical unit we term a _table_.
+   Presented in this draft is a generalized mechanism for delegating and
+   managing such mappings.  Specifically, we describe the structure for
+   a distributed directory with support for delegation "commitments"
+   that have an explicit duration.  Certain known entities are assigned
+   namespaces, loosely associated with a service provided by that entity
+   (i.e domain prefixes for DNS Authorities).  Under that namespace, are
+   authorized to create mapping records, or _cells_, a unit of ownership
+   in the service.  A namespace's cells are grouped into a logical unit
+   we term a _table_.
+
+
+
+
+
+Li, et al.               Expires January 2, 2019                [Page 2]
+
+Internet-Draft             Delegated Mappings                  July 2018
+
 
    Table cells may also explicitly document the delegation of a portion
    of the authority's namespace to another entity with a given public
    key, along with a guarantee on that delegation's lifetime.  Each
    delegation forms a new table, for which the delegee is the sole
-
-
-
-Li, et al.              Expires December 29, 2018               [Page 2]
-
-Internet-Draft             Delegated Mappings                  June 2018
-
-
    authority.  Thus, the delegating entity may not make modifications to
    a delegated table and need not be trusted by the delegee.  The
    namespace segment may be further delegated to others.
@@ -157,18 +161,20 @@ Internet-Draft             Delegated Mappings                  June 2018
         opaque data<>;
     };
 
+
+
+
+
+Li, et al.               Expires January 2, 2019                [Page 3]
+
+Internet-Draft             Delegated Mappings                  July 2018
+
+
 2.1.  Cells
 
    Cells are the basic unit of the delegation structure.  In general,
    they define an authenticated mapping record that may be queried by
    clients.  We describe two types of cells:
-
-
-
-Li, et al.              Expires December 29, 2018               [Page 3]
-
-Internet-Draft             Delegated Mappings                  June 2018
-
 
        enum celltype {
            VALUE = 0,
@@ -179,12 +185,12 @@ Internet-Draft             Delegated Mappings                  June 2018
    key to an arbitrary value, for example, an encryption key associated
    with an email address or a the address of an authoritative nameserver
    for a given DNS zone.  The public key of the cell's owner (e.g. the
-   email account holder, the zone manager, etc.) is also included, as
-   well as a signature authenticating the current version of the cell.
-   The cell must be signed either by the "owner_key", or in some cases,
-   the authority of the table containing the cell, as is described
-   below.  The cell owner may rotate their public key at any time by
-   signing the transition with the old key.
+   email account holder, the zone manager) is also included, as well as
+   a signature authenticating the current version of the cell.  The cell
+   must be signed either by the "owner_key", or in some cases, the
+   authority of the table containing the cell, as is described below.
+   The cell owner may rotate their public key at any time by signing the
+   transition with the old key.
 
        struct valuecell {
            opaque value<>;
@@ -213,19 +219,18 @@ Internet-Draft             Delegated Mappings                  June 2018
    time of last modification.  They are useful indicators and will
    likely be useful in updating consensus nodes that have fallen behind.
 
+
+
+Li, et al.               Expires January 2, 2019                [Page 4]
+
+Internet-Draft             Delegated Mappings                  July 2018
+
+
    An additional "commitment" timestamp must be present in every
    mapping.  It is an explicit guarantee on behalf of the authority
    creating the cell that the mapping will remain valid until at least
    the specified time.  Therefore, while value cell owners may modify
    their cell at any moment, the authority cannot successfully change
-
-
-
-Li, et al.              Expires December 29, 2018               [Page 4]
-
-Internet-Draft             Delegated Mappings                  June 2018
-
-
    (or remove) the cell until its commitment expires.  Similarly,
    delegated namespaces are guaranteed to be valid until the commitment
    timestamp.  This creates a tradeoff between protecting delegees from
@@ -253,8 +258,7 @@ Internet-Draft             Delegated Mappings                  June 2018
    Individual cells are referenced by an application-specific label in a
    lookup table.  Below, we allow for a single lookup key to reference a
    list of cells, for the sake of generality.  The combination of a
-   lookup key and a referenced cell value forms an _authenticated
-   mapping_.
+   lookup key and a referenced cell value forms a mapping.
 
        struct tableentry {
            opaque lookup_key<>;
@@ -273,13 +277,9 @@ Internet-Draft             Delegated Mappings                  June 2018
 
 
 
-
-
-
-
-Li, et al.              Expires December 29, 2018               [Page 5]
+Li, et al.               Expires January 2, 2019                [Page 5]
 
-Internet-Draft             Delegated Mappings                  June 2018
+Internet-Draft             Delegated Mappings                  July 2018
 
 
        struct table {
@@ -333,9 +333,9 @@ Internet-Draft             Delegated Mappings                  June 2018
 
 
 
-Li, et al.              Expires December 29, 2018               [Page 6]
+Li, et al.               Expires January 2, 2019                [Page 6]
 
-Internet-Draft             Delegated Mappings                  June 2018
+Internet-Draft             Delegated Mappings                  July 2018
 
 
        struct rootentry {
@@ -389,9 +389,9 @@ Internet-Draft             Delegated Mappings                  June 2018
 
 
 
-Li, et al.              Expires December 29, 2018               [Page 7]
+Li, et al.               Expires January 2, 2019                [Page 7]
 
-Internet-Draft             Delegated Mappings                  June 2018
+Internet-Draft             Delegated Mappings                  July 2018
 
 
 3.  Consensus
@@ -445,9 +445,9 @@ Internet-Draft             Delegated Mappings                  June 2018
 
 
 
-Li, et al.              Expires December 29, 2018               [Page 8]
+Li, et al.               Expires January 2, 2019                [Page 8]
 
-Internet-Draft             Delegated Mappings                  June 2018
+Internet-Draft             Delegated Mappings                  July 2018
 
 
    delegation follows the table-specified delegation rules, and (3d) the
@@ -494,45 +494,29 @@ Internet-Draft             Delegated Mappings                  June 2018
    [I-D.mazieres-dinrg-scp]
               Barry, N., Losa, G., Mazieres, D., McCaleb, J., and S.
               Polu, "The Stellar Consensus Protocol (SCP)", draft-
-              mazieres-dinrg-scp-03 (work in progress), June 2018.
+              mazieres-dinrg-scp-04 (work in progress), June 2018.
 
 
 
 
 
 
-Li, et al.              Expires December 29, 2018               [Page 9]
+Li, et al.               Expires January 2, 2019                [Page 9]
 
-Internet-Draft             Delegated Mappings                  June 2018
+Internet-Draft             Delegated Mappings                  July 2018
 
 
    [PBFT]     Castro, M. and B. Liskov, "Practical Byzantine Fault
               Tolerance", 1999,
               <http://pmg.csail.mit.edu/papers/osdi99.pdf>.
 
-   [RFC1034]  Mockapetris, P., "Domain names - concepts and facilities",
-              STD 13, RFC 1034, DOI 10.17487/RFC1034, November 1987,
-              <https://www.rfc-editor.org/info/rfc1034>.
-
-   [RFC4033]  Arends, R., Austein, R., Larson, M., Massey, D., and S.
-              Rose, "DNS Security Introduction and Requirements",
-              RFC 4033, DOI 10.17487/RFC4033, March 2005,
-              <https://www.rfc-editor.org/info/rfc4033>.
-
-   [RFC4880]  Callas, J., Donnerhacke, L., Finney, H., Shaw, D., and R.
-              Thayer, "OpenPGP Message Format", RFC 4880,
-              DOI 10.17487/RFC4880, November 2007,
-              <https://www.rfc-editor.org/info/rfc4880>.
-
-   [RFC6960]  Santesson, S., Myers, M., Ankney, R., Malpani, A.,
-              Galperin, S., and C. Adams, "X.509 Internet Public Key
-              Infrastructure Online Certificate Status Protocol - OCSP",
-              RFC 6960, DOI 10.17487/RFC6960, June 2013,
-              <https://www.rfc-editor.org/info/rfc6960>.
-
    [RFC6962]  Laurie, B., Langley, A., and E. Kasper, "Certificate
               Transparency", RFC 6962, DOI 10.17487/RFC6962, June 2013,
               <https://www.rfc-editor.org/info/rfc6962>.
+
+   [RFC7249]  Housley, R., "Internet Numbers Registries", RFC 7249,
+              DOI 10.17487/RFC7249, May 2014,
+              <https://www.rfc-editor.org/info/rfc7249>.
 
 Acknowledgments
 
@@ -555,13 +539,6 @@ Authors' Addresses
    Email: sydney@eff.org
 
 
-
-
-Li, et al.              Expires December 29, 2018              [Page 10]
-
-Internet-Draft             Delegated Mappings                  June 2018
-
-
    Colin Man
    Stanford University
    353 Serra Mall
@@ -569,6 +546,20 @@ Internet-Draft             Delegated Mappings                  June 2018
    US
 
    Email: colinman@cs.stanford.edu
+
+
+
+
+
+
+
+
+
+
+
+Li, et al.               Expires January 2, 2019               [Page 10]
+
+Internet-Draft             Delegated Mappings                  July 2018
 
 
    Jean-Luc Watson
@@ -613,4 +604,13 @@ Internet-Draft             Delegated Mappings                  June 2018
 
 
 
-Li, et al.              Expires December 29, 2018              [Page 11]
+
+
+
+
+
+
+
+
+
+Li, et al.               Expires January 2, 2019               [Page 11]
