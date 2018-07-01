@@ -50,15 +50,6 @@ normative:
 informative:
   RFC7249:
   RFC6962:
-  bin-transparency:
-    title: Security/Binary Transparency
-    author:
-      -
-        ins: R. Barnes
-        name: Richard Barnes
-        org: Mozilla
-    target: https://wiki.mozilla.org/Security/Binary_Transparency
-    date: 2017
   I-D.mazieres-dinrg-scp:
   PBFT:
     title: Practical Byzantine Fault Tolerance

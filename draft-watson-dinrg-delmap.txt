@@ -81,7 +81,7 @@ Table of Contents
      5.1.  Normative References  . . . . . . . . . . . . . . . . . .  10
      5.2.  Informative References  . . . . . . . . . . . . . . . . .  10
    Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .  10
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  11
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  10
 
 1.  Introduction
 
@@ -520,10 +520,6 @@ Internet-Draft             Delegated Mappings                  July 2018
 
 5.2.  Informative References
 
-   [bin-transparency]
-              Barnes, R., "Security/Binary Transparency", 2017,
-              <https://wiki.mozilla.org/Security/Binary_Transparency>.
-
    [I-D.mazieres-dinrg-scp]
               Barry, N., Losa, G., Mazieres, D., McCaleb, J., and S.
               Polu, "The Stellar Consensus Protocol (SCP)", draft-
@@ -551,6 +547,10 @@ Acknowledgments
    This work was supported by The Stanford Center For Blockchain
    Research.
 
+Authors' Addresses
+
+
+
 
 
 
@@ -561,8 +561,6 @@ Li, et al.               Expires January 2, 2019               [Page 10]
 
 Internet-Draft             Delegated Mappings                  July 2018
 
-
-Authors' Addresses
 
    Sydney Li
    Electronic Frontier Foundation
@@ -589,6 +587,8 @@ Authors' Addresses
    US
 
    Email: jlwatson@cs.stanford.edu
+
+
 
 
 
