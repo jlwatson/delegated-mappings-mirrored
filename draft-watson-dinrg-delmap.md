@@ -361,10 +361,10 @@ requires a limited, static membership and can tolerate compromises in up to a
 third of its nodes. In comparison, proof-of-work schemes including many
 cryptocurrencies have open membership but rely on economic incentives and
 distributed control of hashing power to provide safety, and federated consensus
-algorithms ({{I-D.mazieres-dinrg-scp}}) combine dynamic members with real-world
-trust relationships but require careful configuration. Determining which
-scheme, if any, is the "correct" protocol to support authenticated delegation
-is an open question.
+algorithms like the Stellar Consensus Protocol (SCP) {{I-D.mazieres-dinrg-scp}}
+combine dynamic members with real-world trust relationships but require careful
+configuration. Determining which scheme, if any, is the "correct" protocol to
+support authenticated delegation is an open question.
 
 ## Validation
 
@@ -407,6 +407,25 @@ an expired commitment timestamp.
 
 Only after a round of the consensus protocol is successful are the changes
 exposed to client lookups.
+
+## SCP
+
+While consensus can be reached with many protocols, this section describes how
+the delegation tables can interface with an SCP implementation. 
+
+As discussed above, updates to the delegation tables take the form of Merkle
+proofs along with the table change itself. Since SCP does not need specific
+knowledge of the format of these proofs, they directly form the opaque values
+submitted to the consensus layer. Once a combination of proofs are agreed to as
+outputs for a given slot, they are applied to the local tables state.
+
+Finally, {{I-D.mazieres-dinrg-scp}} requires the delegation layer to provide a
+_validity_ function that is applied to each input value, and a _combining
+function_ to compose multiple candidate values. For this application, the
+validity function must implement the logic contained in the previous section.
+The combining function can simply take the union of the valid proofs proposed
+by the consensus nodes, rejecting valid, duplicate updates to the same cell in
+favor of the most up-to-date timestamp.
 
 # Security Considerations
 
