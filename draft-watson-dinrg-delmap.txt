@@ -5,9 +5,9 @@
 Network Working Group                                              S. Li
 Internet-Draft                                                       EFF
 Intended status: Experimental                                     C. Man
-Expires: January 2, 2019                                       J. Watson
+Expires: January 3, 2019                                       J. Watson
                                                      Stanford University
-                                                           July 01, 2018
+                                                           July 02, 2018
 
 
                      Delegated Distributed Mappings
@@ -21,8 +21,8 @@ Abstract
    specifies a generalized scheme for delegation with a structure that
    supports explicit delegation guarantees.  The resulting data may be
    secured by any general purpose distributed consensus protocol;
-   clients may query the local state of any number of participants and
-   receive the correct result barring a compromise of the consensus
+   clients can query the local state of any number of participants and
+   receive the correct result barring a compromise at the consensus
    layer.
 
 Status of This Memo
@@ -40,7 +40,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on January 2, 2019.
+   This Internet-Draft will expire on January 3, 2019.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Li, et al.               Expires January 2, 2019                [Page 1]
+Li, et al.               Expires January 3, 2019                [Page 1]
 
 Internet-Draft             Delegated Mappings                  July 2018
 
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Li, et al.               Expires January 2, 2019                [Page 2]
+Li, et al.               Expires January 3, 2019                [Page 2]
 
 Internet-Draft             Delegated Mappings                  July 2018
 
@@ -165,7 +165,7 @@ Internet-Draft             Delegated Mappings                  July 2018
 
 
 
-Li, et al.               Expires January 2, 2019                [Page 3]
+Li, et al.               Expires January 3, 2019                [Page 3]
 
 Internet-Draft             Delegated Mappings                  July 2018
 
@@ -221,7 +221,7 @@ Internet-Draft             Delegated Mappings                  July 2018
 
 
 
-Li, et al.               Expires January 2, 2019                [Page 4]
+Li, et al.               Expires January 3, 2019                [Page 4]
 
 Internet-Draft             Delegated Mappings                  July 2018
 
@@ -277,7 +277,7 @@ Internet-Draft             Delegated Mappings                  July 2018
 
 
 
-Li, et al.               Expires January 2, 2019                [Page 5]
+Li, et al.               Expires January 3, 2019                [Page 5]
 
 Internet-Draft             Delegated Mappings                  July 2018
 
@@ -333,7 +333,7 @@ Internet-Draft             Delegated Mappings                  July 2018
 
 
 
-Li, et al.               Expires January 2, 2019                [Page 6]
+Li, et al.               Expires January 3, 2019                [Page 6]
 
 Internet-Draft             Delegated Mappings                  July 2018
 
@@ -389,7 +389,7 @@ Internet-Draft             Delegated Mappings                  July 2018
 
 
 
-Li, et al.               Expires January 2, 2019                [Page 7]
+Li, et al.               Expires January 3, 2019                [Page 7]
 
 Internet-Draft             Delegated Mappings                  July 2018
 
@@ -445,7 +445,7 @@ Internet-Draft             Delegated Mappings                  July 2018
 
 
 
-Li, et al.               Expires January 2, 2019                [Page 8]
+Li, et al.               Expires January 3, 2019                [Page 8]
 
 Internet-Draft             Delegated Mappings                  July 2018
 
@@ -501,7 +501,7 @@ Internet-Draft             Delegated Mappings                  July 2018
 
 
 
-Li, et al.               Expires January 2, 2019                [Page 9]
+Li, et al.               Expires January 3, 2019                [Page 9]
 
 Internet-Draft             Delegated Mappings                  July 2018
 
@@ -557,7 +557,7 @@ Authors' Addresses
 
 
 
-Li, et al.               Expires January 2, 2019               [Page 10]
+Li, et al.               Expires January 3, 2019               [Page 10]
 
 Internet-Draft             Delegated Mappings                  July 2018
 
@@ -613,4 +613,4 @@ Internet-Draft             Delegated Mappings                  July 2018
 
 
 
-Li, et al.               Expires January 2, 2019               [Page 11]
+Li, et al.               Expires January 3, 2019               [Page 11]

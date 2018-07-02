@@ -72,8 +72,8 @@ almost every Internet entity but are centrally managed, unilaterally revokable,
 and lack a common interface. This draft specifies a generalized scheme for
 delegation with a structure that supports explicit delegation guarantees. The
 resulting data may be secured by any general purpose distributed consensus
-protocol; clients may query the local state of any number of participants and
-receive the correct result barring a compromise of the consensus layer.
+protocol; clients can query the local state of any number of participants and
+receive the correct result barring a compromise at the consensus layer.
 
 --- middle
 
